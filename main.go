@@ -84,6 +84,10 @@ func main() {
 			}
 
 			resultsCount := utils.MinInt(limit, len(results))
+			if limit == 0 {
+				resultsCount = len(results)
+			}
+
 			countLabel := fmt.Sprintf("(showing all %d)", resultsCount)
 
 			if resultsCount != len(results) {
