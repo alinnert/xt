@@ -15,6 +15,7 @@ import (
 
 func main() {
 	var limit int
+	var exact bool
 	var verbose bool
 
 	// xt some-file.xsd --limit 5 --verbose
@@ -51,11 +52,13 @@ func main() {
 			}
 
 			// Get all possible target vertex hashes.
-			for element := range adjMap {
-				if !strings.HasSuffix(element, "/"+elementArg) {
-					continue
+			if !exact {
+				for element := range adjMap {
+					if !strings.HasSuffix(element, "/"+elementArg) {
+						continue
+					}
+					targetElements = append(targetElements, element)
 				}
-				targetElements = append(targetElements, element)
 			}
 
 			// Fetch all results.
@@ -108,6 +111,14 @@ func main() {
 		"l",
 		5,
 		"Limit the number of results. Only the shortest results are shown.",
+	)
+
+	rootCmd.Flags().BoolVarP(
+		&exact,
+		"exact",
+		"e",
+		false,
+		"If flag is set and search term is \"elem\" only \"elem\" is found. Otherwise \"parent/elem\" is also found.",
 	)
 
 	rootCmd.Flags().BoolVarP(
