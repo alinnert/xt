@@ -1,10 +1,24 @@
 package utils
 
+type MapContext[T any] struct {
+	Items               []T
+	Item                T
+	Index               int
+	FirstItem, LastItem bool
+}
+
 // Map applies a function to all elements in a list and returns a mutated list.
-func Map[T, V any](items []T, cb func(T) V) []V {
+func Map[T, V any](items []T, cb func(MapContext[T]) V) []V {
 	result := make([]V, len(items))
 	for i, item := range items {
-		result[i] = cb(item)
+		ctx := MapContext[T]{
+			Items:     items,
+			Item:      item,
+			Index:     i,
+			FirstItem: i == 0,
+			LastItem:  i == len(items)-1,
+		}
+		result[i] = cb(ctx)
 	}
 	return result
 }
