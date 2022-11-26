@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/alinnert/xt/log"
 	"github.com/alinnert/xt/xsd"
 	"github.com/dominikbraun/graph"
 
@@ -30,12 +31,16 @@ func ResolveIncludes(mainFilePath string, verbose bool) (XsdFileGraph, error) {
 		return nil, err
 	}
 
+	if verbose {
+		fmt.Println()
+	}
+
 	return fileGraph, nil
 }
 
 func processFile(fileGraph XsdFileGraph, filePath string, verbose bool) error {
 	if verbose {
-		fmt.Println("Add file:", filePath)
+		log.AddFile(filePath)
 	}
 
 	content, err := os.ReadFile(filePath)
@@ -64,7 +69,7 @@ func processFile(fileGraph XsdFileGraph, filePath string, verbose bool) error {
 		nextFilePath := filepath.Join(currentDir, include.SelectAttr("schemaLocation"))
 
 		if _, err := fileGraph.Vertex(nextFilePath); err == nil {
-			fmt.Println("duplicate include:", nextFilePath)
+			log.DuplicateFile(nextFilePath)
 			continue
 		}
 

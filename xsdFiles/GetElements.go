@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/alinnert/xt/log"
 	"github.com/alinnert/xt/utils"
 	"github.com/alinnert/xt/xsd"
 	"github.com/antchfx/xmlquery"
@@ -70,7 +71,7 @@ func findRootElements(filePath string, filesGraph XsdFileGraph, elementsGraph El
 
 		if _, err := elementsGraph.Vertex(rootElementName); err == nil {
 			if verbose {
-				fmt.Println("  duplicate element:", rootElementName)
+				log.DuplicateElement(rootElementName)
 			}
 
 			return nil
@@ -78,7 +79,7 @@ func findRootElements(filePath string, filesGraph XsdFileGraph, elementsGraph El
 
 		// Add root document elements
 		if verbose {
-			fmt.Println("add root element", rootElementName)
+			log.AddElement(rootElementName)
 		}
 
 		err = elementsGraph.AddVertex(utils.XsdElement{PathSegments: []string{rootElementName}})
@@ -116,7 +117,7 @@ func findNestedElements(filePath string, filesGraph XsdFileGraph, elementsGraph 
 
 	for _, rootElement := range rootElements {
 		if verbose {
-			fmt.Println("[", rootElement.SelectAttr("name"), "]")
+			log.ElementHeadline(rootElement.SelectAttr("name"))
 		}
 
 		err := findLeafElements(rootElement, elementsGraph, verbose)
@@ -127,10 +128,6 @@ func findNestedElements(filePath string, filesGraph XsdFileGraph, elementsGraph 
 		err = findLeafElementRefs(rootElement, elementsGraph, verbose)
 		if err != nil {
 			return err
-		}
-
-		if verbose {
-			fmt.Println()
 		}
 	}
 
@@ -146,11 +143,7 @@ func findLeafElements(rootElement *xmlquery.Node, elementsGraph ElementsGraph, v
 	}
 
 	if verbose {
-		if lenLeafElements := len(leafElements); lenLeafElements == 1 {
-			fmt.Println("1 leaf element")
-		} else {
-			fmt.Println(lenLeafElements, "leaf elements")
-		}
+		log.LeafElementsCount(len(leafElements))
 	}
 
 	for _, leafElement := range leafElements {
@@ -172,11 +165,7 @@ func findLeafElementRefs(rootElement *xmlquery.Node, elementsGraph ElementsGraph
 	}
 
 	if verbose {
-		if lenLeafElementRefs := len(leafElementRefs); lenLeafElementRefs == 1 {
-			fmt.Println("1 leaf element ref")
-		} else {
-			fmt.Println(lenLeafElementRefs, "leaf element refs")
-		}
+		log.ElementRefsCount(len(leafElementRefs))
 	}
 
 	for _, elementRef := range leafElementRefs {
@@ -194,7 +183,7 @@ func findLeafElementRefs(rootElement *xmlquery.Node, elementsGraph ElementsGraph
 		closestAncestorName := closestAncestor.SelectAttr("name")
 
 		if verbose {
-			fmt.Println("add edge for reference", closestAncestorName, "->", referencedElementName)
+			log.AddReference(closestAncestorName, referencedElementName)
 		}
 
 		err = elementsGraph.AddEdge(closestAncestorName, referencedElementName)
@@ -218,8 +207,8 @@ func findLeafAncestorElements(leafElement *xmlquery.Node, elementsGraph Elements
 
 	ancestors = utils.Reverse(ancestors)
 
-	ancestorElementNames := utils.Map(ancestors, func(ancestor *xmlquery.Node) string {
-		return ancestor.SelectAttr("name")
+	ancestorElementNames := utils.Map(ancestors, func(ctx utils.MapContext[*xmlquery.Node]) string {
+		return ctx.Item.SelectAttr("name")
 	})
 
 	leafElementPathSegments := append(ancestorElementNames, leafElementName)
@@ -236,7 +225,7 @@ func findLeafAncestorElements(leafElement *xmlquery.Node, elementsGraph Elements
 
 		// Add descendant elements
 		if verbose {
-			fmt.Println("add nested element", currentItemPath)
+			log.AddElement(currentItemPath)
 		}
 
 		err = elementsGraph.AddVertex(utils.XsdElement{PathSegments: currentItemPathSegments})
@@ -245,7 +234,8 @@ func findLeafAncestorElements(leafElement *xmlquery.Node, elementsGraph Elements
 		}
 
 		if verbose {
-			fmt.Println("add edge for nested element", parentPath, "->", currentItemPath)
+			log.AddReference(parentPath, currentItemPath)
+			fmt.Println()
 		}
 
 		err = elementsGraph.AddEdge(parentPath, currentItemPath)

@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/alinnert/xt/log"
 	"github.com/alinnert/xt/utils"
 	"github.com/alinnert/xt/xsdFiles"
 	"github.com/dominikbraun/graph"
@@ -81,6 +82,10 @@ func main() {
 			})
 
 			// Print all results.
+			if verbose {
+				fmt.Println()
+			}
+
 			if len(results) == 0 {
 				fmt.Printf("No paths found for element \"" + elementArg + "\"\n")
 				return
@@ -100,7 +105,7 @@ func main() {
 			fmt.Printf("Possible paths for element \"%s\" %s\n", elementArg, countLabel)
 
 			for _, result := range results[:resultsCount] {
-				fmt.Println("-", strings.Join(result, " > "))
+				log.PathsResult(result)
 			}
 		},
 	}
