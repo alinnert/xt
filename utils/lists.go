@@ -1,5 +1,7 @@
 package utils
 
+// MapContext is the type of the parameter that's being passed to Map's callback function.
+// It contains all relevant data for a map iteration.
 type MapContext[T any] struct {
 	Items               []T
 	Item                T
