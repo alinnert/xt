@@ -1,4 +1,4 @@
-package xsdFiles
+package xsd
 
 import (
 	"fmt"
@@ -6,21 +6,21 @@ import (
 
 	"github.com/alinnert/xt/log"
 	"github.com/alinnert/xt/utils"
-	"github.com/alinnert/xt/xsd"
 	"github.com/antchfx/xmlquery"
 	"github.com/dominikbraun/graph"
 )
 
-type ElementsGraph = graph.Graph[string, utils.XsdElement]
+// ElementsGraph is a graph.Graph that includes all found element definitions and their relations to each other.
+type ElementsGraph = graph.Graph[string, XsdElement]
 
 // GetElements is the entry point of the element processing logic.
-func GetElements(filesGraph XsdFileGraph, verbose bool) (ElementsGraph, error) {
-	elementsGraph := graph.New(func(element utils.XsdElement) string {
+func GetElements(filesGraph FilesGraph, verbose bool) (ElementsGraph, error) {
+	elementsGraph := graph.New(func(element XsdElement) string {
 		return element.PathString()
 	}, graph.Directed())
 
 	// Add the main root element
-	err := elementsGraph.AddVertex(utils.XsdElement{PathSegments: []string{}})
+	err := elementsGraph.AddVertex(XsdElement{PathSegments: []string{}})
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func GetElements(filesGraph XsdFileGraph, verbose bool) (ElementsGraph, error) {
 }
 
 // findRootElements finds and processes all root elements.
-func findRootElements(filePath string, filesGraph XsdFileGraph, elementsGraph ElementsGraph, verbose bool) error {
+func findRootElements(filePath string, filesGraph FilesGraph, elementsGraph ElementsGraph, verbose bool) error {
 	fileVertex, err := filesGraph.Vertex(filePath)
 	if err != nil {
 		return err
@@ -59,7 +59,7 @@ func findRootElements(filePath string, filesGraph XsdFileGraph, elementsGraph El
 		return err
 	}
 
-	rootElementsQuery := "/" + xsd.Element("schema") + "/" + xsd.Element("element") + "[@name]"
+	rootElementsQuery := "/" + Element("schema") + "/" + Element("element") + "[@name]"
 
 	rootElements, err := xmlquery.QueryAll(doc, rootElementsQuery)
 	if err != nil {
@@ -82,7 +82,7 @@ func findRootElements(filePath string, filesGraph XsdFileGraph, elementsGraph El
 			log.AddElement(rootElementName)
 		}
 
-		err = elementsGraph.AddVertex(utils.XsdElement{PathSegments: []string{rootElementName}})
+		err = elementsGraph.AddVertex(XsdElement{PathSegments: []string{rootElementName}})
 		if err != nil {
 			return err
 		}
@@ -97,7 +97,7 @@ func findRootElements(filePath string, filesGraph XsdFileGraph, elementsGraph El
 }
 
 // findNestedElements calls findLeafElements and findLeafElementRefs.
-func findNestedElements(filePath string, filesGraph XsdFileGraph, elementsGraph ElementsGraph, verbose bool) error {
+func findNestedElements(filePath string, filesGraph FilesGraph, elementsGraph ElementsGraph, verbose bool) error {
 	fileVertex, err := filesGraph.Vertex(filePath)
 	if err != nil {
 		return err
@@ -108,7 +108,7 @@ func findNestedElements(filePath string, filesGraph XsdFileGraph, elementsGraph 
 		return err
 	}
 
-	rootElementsQuery := "/" + xsd.Element("schema") + "/" + xsd.Element("element") + "[@name]"
+	rootElementsQuery := "/" + Element("schema") + "/" + Element("element") + "[@name]"
 
 	rootElements, err := xmlquery.QueryAll(doc, rootElementsQuery)
 	if err != nil {
@@ -136,7 +136,7 @@ func findNestedElements(filePath string, filesGraph XsdFileGraph, elementsGraph 
 
 // findLeafElements finds and processes all leaf elements. Those are the most deeply nested ones.
 func findLeafElements(rootElement *xmlquery.Node, elementsGraph ElementsGraph, verbose bool) error {
-	leafElementsQuery := "/descendant::" + xsd.Element("element") + "[not(descendant::" + xsd.Element("element") + "[@name])][@name]"
+	leafElementsQuery := "/descendant::" + Element("element") + "[not(descendant::" + Element("element") + "[@name])][@name]"
 	leafElements, err := xmlquery.QueryAll(rootElement, leafElementsQuery)
 	if err != nil {
 		return err
@@ -158,7 +158,7 @@ func findLeafElements(rootElement *xmlquery.Node, elementsGraph ElementsGraph, v
 
 // findLeafElementRefs finds and processes all leaf elements that are references to root elements.
 func findLeafElementRefs(rootElement *xmlquery.Node, elementsGraph ElementsGraph, verbose bool) error {
-	leafElementRefsQuery := "/descendant::" + xsd.Element("element") + "[@ref]"
+	leafElementRefsQuery := "/descendant::" + Element("element") + "[@ref]"
 	leafElementRefs, err := xmlquery.QueryAll(rootElement, leafElementRefsQuery)
 	if err != nil {
 		return err
@@ -174,7 +174,7 @@ func findLeafElementRefs(rootElement *xmlquery.Node, elementsGraph ElementsGraph
 			continue
 		}
 
-		closestAncestorQuery := "/ancestor::" + xsd.Element("element") + "[@name][1]"
+		closestAncestorQuery := "/ancestor::" + Element("element") + "[@name][1]"
 		closestAncestor, err := xmlquery.Query(elementRef, closestAncestorQuery)
 		if err != nil {
 			return err
@@ -199,7 +199,7 @@ func findLeafElementRefs(rootElement *xmlquery.Node, elementsGraph ElementsGraph
 func findLeafAncestorElements(leafElement *xmlquery.Node, elementsGraph ElementsGraph, verbose bool) error {
 	leafElementName := leafElement.SelectAttr("name")
 
-	ancestorsQuery := "/ancestor::" + xsd.Element("element") + "[@name]"
+	ancestorsQuery := "/ancestor::" + Element("element") + "[@name]"
 	ancestors, err := xmlquery.QueryAll(leafElement, ancestorsQuery)
 	if err != nil {
 		return err
@@ -212,11 +212,11 @@ func findLeafAncestorElements(leafElement *xmlquery.Node, elementsGraph Elements
 	})
 
 	leafElementPathSegments := append(ancestorElementNames, leafElementName)
-	ancestorPaths := xsd.GetAncestorPathSegments(leafElementPathSegments)
+	ancestorPaths := GetAncestorPathSegments(leafElementPathSegments)
 
 	for _, currentItemPathSegments := range ancestorPaths {
 		currentItemPath := strings.Join(currentItemPathSegments, "/")
-		parentPathSegments := xsd.GetParent(currentItemPathSegments)
+		parentPathSegments := GetParent(currentItemPathSegments)
 		parentPath := strings.Join(parentPathSegments, "/")
 
 		if _, err := elementsGraph.Vertex(currentItemPath); err == nil {
@@ -228,7 +228,7 @@ func findLeafAncestorElements(leafElement *xmlquery.Node, elementsGraph Elements
 			log.AddElement(currentItemPath)
 		}
 
-		err = elementsGraph.AddVertex(utils.XsdElement{PathSegments: currentItemPathSegments})
+		err = elementsGraph.AddVertex(XsdElement{PathSegments: currentItemPathSegments})
 		if err != nil {
 			return err
 		}

@@ -58,27 +58,33 @@ func colorizeAction(action string) string {
 	return color.HiWhiteString(action + ":")
 }
 
+// AddFile logs a file when it gets loaded while following all `include` elements from an XML Schema file.
 func AddFile(filePath string) {
 	fmt.Println(colorizeAction("Add file"), color.GreenString(filePath))
 }
 
+// DuplicateFile logs a file that gets loaded at least for a second time.
 func DuplicateFile(filePath string) {
 	fmt.Println(colorizeAction("Duplicate file"), color.YellowString(filePath))
 }
 
+// ElementHeadline prints a headline for an element that gets processed.
 func ElementHeadline(elementName string) {
 	fmt.Println()
 	fmt.Println(addBrackets(color.HiYellowString(elementName)))
 }
 
+// AddElement logs an element that was found while parsing an XML Schema file.
 func AddElement(elementName string) {
 	fmt.Println(colorizeAction("Add element"), colorizeElement(elementName))
 }
 
+// DuplicateElement logs an element that was found at least for a second time.
 func DuplicateElement(elementName string) {
 	fmt.Println(colorizeAction("Duplicate element"), colorizeElement(elementName))
 }
 
+// LeafElementsCount prints the number of leaf elements that were found inside a given root level element.
 func LeafElementsCount(count int) {
 	c := color.New(color.FgGreen).SprintFunc()
 	if count == 1 {
@@ -88,6 +94,7 @@ func LeafElementsCount(count int) {
 	}
 }
 
+// ElementRefsCount prints the number of element references that were found inside a given root level element.
 func ElementRefsCount(count int) {
 	c := color.New(color.FgGreen).SprintFunc()
 	if count == 1 {
@@ -97,10 +104,12 @@ func ElementRefsCount(count int) {
 	}
 }
 
+// AddReference logs a reference that is being created.
 func AddReference(from, to string) {
 	fmt.Println(colorizeAction("Add reference"), colorizeElement(from), referenceDivider, colorizeElement(to))
 }
 
+// PathsResult prints a result line for the main command.
 func PathsResult(segments []string) {
 	fmt.Println("-", colorizePath(segments))
 }

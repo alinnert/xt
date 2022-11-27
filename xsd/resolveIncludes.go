@@ -1,4 +1,4 @@
-package xsdFiles
+package xsd
 
 import (
 	"fmt"
@@ -7,26 +7,27 @@ import (
 	"strings"
 
 	"github.com/alinnert/xt/log"
-	"github.com/alinnert/xt/xsd"
 	"github.com/dominikbraun/graph"
 
 	"github.com/antchfx/xmlquery"
 )
 
+// XsdFile represents an XML Schema file. It contains the filename as well as the file content.
 type XsdFile struct {
 	Path    string
 	Content []byte
 }
 
-type XsdFileGraph = graph.Graph[string, XsdFile]
+// FilesGraph is the graph.Graph that contains all loaded XML Schema files.
+type FilesGraph = graph.Graph[string, XsdFile]
 
 // ResolveIncludes reads the contents of all included files in an XSD file.
-func ResolveIncludes(mainFilePath string, verbose bool) (XsdFileGraph, error) {
-	fileGraph := graph.New(func(xsdFile XsdFile) string {
+func ResolveIncludes(mainFilePath string, verbose bool) (FilesGraph, error) {
+	filesGraph := graph.New(func(xsdFile XsdFile) string {
 		return xsdFile.Path
 	})
 
-	err := processFile(fileGraph, mainFilePath, verbose)
+	err := processFile(filesGraph, mainFilePath, verbose)
 	if err != nil {
 		return nil, err
 	}
@@ -35,10 +36,10 @@ func ResolveIncludes(mainFilePath string, verbose bool) (XsdFileGraph, error) {
 		fmt.Println()
 	}
 
-	return fileGraph, nil
+	return filesGraph, nil
 }
 
-func processFile(fileGraph XsdFileGraph, filePath string, verbose bool) error {
+func processFile(fileGraph FilesGraph, filePath string, verbose bool) error {
 	if verbose {
 		log.AddFile(filePath)
 	}
@@ -58,7 +59,7 @@ func processFile(fileGraph XsdFileGraph, filePath string, verbose bool) error {
 		return err
 	}
 
-	includes, err := xmlquery.QueryAll(document, "//"+xsd.Element("include")+"[@schemaLocation]")
+	includes, err := xmlquery.QueryAll(document, "//"+Element("include")+"[@schemaLocation]")
 	if err != nil {
 		return err
 	}
