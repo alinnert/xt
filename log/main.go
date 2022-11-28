@@ -27,19 +27,19 @@ func colorizeElement(elementName string) string {
 		return colorizeSegment(elementName, true)
 	}
 
-	colorizedSegments := utils.Map(segments, func(ctx utils.MapContext[string]) string {
+	colorizedSegments := utils.Map(&segments, func(ctx *utils.MapContext[string]) string {
 		if ctx.LastItem {
-			return colorizeSegment(ctx.Item, true)
+			return colorizeSegment(*ctx.Item, true)
 		}
-		return colorizeSegment(ctx.Item, false)
+		return colorizeSegment(*ctx.Item, false)
 	})
 
 	return strings.Join(colorizedSegments, color.HiBlackString("/"))
 }
 
 func colorizePath(path []string) string {
-	colorizedPath := utils.Map(path, func(ctx utils.MapContext[string]) string {
-		segments := strings.Split(ctx.Item, "/")
+	colorizedPath := utils.Map(&path, func(ctx *utils.MapContext[string]) string {
+		segments := strings.Split(*ctx.Item, "/")
 		lastSegment := segments[len(segments)-1]
 		colorizedLastSegment := colorizeElement(lastSegment)
 		if ctx.FirstItem {
