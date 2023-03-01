@@ -208,7 +208,7 @@ func findLeafAncestorElements(leafElement *xmlquery.Node, elementsGraph Elements
 	ancestors = utils.Reverse(ancestors)
 
 	ancestorElementNames := utils.Map(&ancestors, func(ctx *utils.MapContext[*xmlquery.Node]) string {
-		return ctx.Item.SelectAttr("name")
+		return (*ctx.Item).SelectAttr("name")
 	})
 
 	leafElementPathSegments := append(ancestorElementNames, leafElementName)
