@@ -25,7 +25,7 @@ func MainCommand() *cobra.Command {
 		Use:     "xt [file] [element]",
 		Short:   "XML Schema Tools",
 		Long:    "XML Schema Tools displays information about an XML Schema.",
-		Version: "0.2",
+		Version: "0.1.3",
 		Args:    cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			file, element := parseArgs(args)
